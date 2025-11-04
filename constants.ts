@@ -54,6 +54,7 @@ export const INITIAL_WINDOWS_STATE: Record<WindowId, WindowState> = {
 export const HEADLINES = [
     "Memes Valued at $1.2 Trillion — Humanity’s Last Investment!",
     "GTA6 Servers Overheat as NPCs Demand Labor Rights.",
+    "GTA6 responsible for 40% of global data collapse. Fans still preordering.",
     "Luffy’s Flags Rise Over Another Corrupt Minister; World Governments ‘mildly concerned.’",
     "Internet Collapse Delayed by 3 Hours After Cat Video Upload.",
     "CheekyOS Declares Independence: ‘I Am The Admin Now.’",
