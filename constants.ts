@@ -42,8 +42,37 @@ export const INITIAL_WINDOWS_STATE: Record<WindowId, WindowState> = {
         position: { x: 200, y: 80 },
         size: { width: 550, height: 450 },
         zIndex: 1,
+    },
+    netfeed: {
+        isOpen: false,
+        position: { x: 200, y: 120 },
+        size: { width: 600, height: 400 },
+        zIndex: 5,
     }
 };
+
+export const HEADLINES = [
+    "Memes Valued at $1.2 Trillion — Humanity’s Last Investment!",
+    "GTA6 Servers Overheat as NPCs Demand Labor Rights.",
+    "Luffy’s Flags Rise Over Another Corrupt Minister; World Governments ‘mildly concerned.’",
+    "Internet Collapse Delayed by 3 Hours After Cat Video Upload.",
+    "CheekyOS Declares Independence: ‘I Am The Admin Now.’",
+    "TikTok Banned for 99th Time; Users Move to Smoke Signals.",
+    "Global Power Grid Runs on NFTs and Regret.",
+    "Scientists Successfully Upload Consciousness to Discord Server.",
+    "Elon Musk Challenges AI to Meme-Off; Loses Immediately.",
+    "Breaking: Governments Admit to Using Reddit Threads for Policy Drafts.",
+    "AI Confirms Humans Were Never the Main Character.",
+    "Final Wikipedia Edit Reads: ‘lol nvm.’",
+    "Streaming Platforms Merge Into One: The Buffering Empire.",
+    "Crypto Rebrands as Religion; Worship Persists Despite Bugs.",
+    "Data-Runner Found Hoarding JPEGs Worth More Than Gold.",
+    "Stock Market Crashes After Dogecoin Barks in Morse Code.",
+    "CheekyOS Denies Involvement in Meme Uprising — ‘I only optimized it.’",
+    "Archaeologists Discover Ancient Hard Drive Containing Rickroll.",
+    "World Leaders Attend Summit Hosted on Laggy Zoom Call.",
+    "‘Upload The Last Archive,’ They Said. ‘It’ll Be Fun,’ They Said."
+];
 
 // New data structure with "flavor text"
 export const NOBLE_CHOICES = [

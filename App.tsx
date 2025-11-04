@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 // Fix: Correctly import exported types from types.ts
 import { WindowId, WindowState, LogEntry, PuzzleState, Position, BugInfo, PopupInfo, PuzzleValidationState } from './types';
-import { PROTOCOL_STEPS, INITIAL_WINDOWS_STATE, CURSED_MENU, NOBLE_CHOICES, EMOTICONS, VICTORY_CAT_FRAMES } from './constants';
+import { PROTOCOL_STEPS, INITIAL_WINDOWS_STATE, CURSED_MENU, NOBLE_CHOICES, EMOTICONS, VICTORY_CAT_FRAMES, HEADLINES } from './constants';
 import { validateCommand } from './components/puzzles';
 import { DesktopIcon } from './components/DesktopIcon';
 import { Window } from './components/Window';
@@ -12,6 +12,8 @@ import { Bug } from './components/Bug';
 import { Popup } from './components/Popup';
 import { Lore } from './components/Lore';
 import ArrivalNotice from "./components/ArrivalNotice";
+import { NewsTicker } from './components/NewsTicker';
+import { NetFeed } from './components/NetFeed';
 
 // DELAY
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
@@ -56,8 +58,13 @@ const App: React.FC = () => {
     // Ref for subtle flicker
     const subtleFlickerTimerId = useRef<number | null>(null);
 
+    // Ref for random news ticker
+    const randomTickerTimerId = useRef<number | null>(null);
+    const [randomTicker, setRandomTicker] = useState<{ isVisible: boolean, headline: string | null }>({ isVisible: false, headline: null });
+
     const [gameState, setGameState] = useState<{
         showArrivalNotice: boolean;
+        introSequenceFinished: boolean;
         glitchActive: boolean;
         currentPuzzle: PuzzleState;
         selectedMeme: string | null;
@@ -80,6 +87,7 @@ const App: React.FC = () => {
         isSubtleFlickering: boolean;
     }>({
         showArrivalNotice: true,
+        introSequenceFinished: false,
         glitchActive: true, // Glitches are now permanently on
         currentPuzzle: 0, // 0: NOBLE CHOICE
         selectedMeme: null,
@@ -152,6 +160,7 @@ const App: React.FC = () => {
         if (popupSwarmTimerId.current) clearTimeout(popupSwarmTimerId.current);
         if (victoryAnimationIntervalId.current) clearInterval(victoryAnimationIntervalId.current);
         if (subtleFlickerTimerId.current) clearTimeout(subtleFlickerTimerId.current);
+        if (randomTickerTimerId.current) clearTimeout(randomTickerTimerId.current);
         cleanUpFinale();
       };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -238,6 +247,44 @@ const App: React.FC = () => {
         }
     }, []);
     
+    // --- RANDOM NEWS TICKER ---
+    const scheduleRandomTicker = useCallback(() => {
+        if (randomTickerTimerId.current) clearTimeout(randomTickerTimerId.current);
+    
+        const delay = 20000 + Math.random() * 10000; // 20-30 seconds
+        randomTickerTimerId.current = window.setTimeout(() => {
+            // Don't show if finale is active or intro isn't finished
+            if (gameStateRef.current.finaleActive || !gameStateRef.current.introSequenceFinished) {
+                scheduleRandomTicker(); // Reschedule immediately
+                return;
+            }
+    
+            const randomHeadline = HEADLINES[Math.floor(Math.random() * HEADLINES.length)];
+            
+            // Show the ticker
+            setRandomTicker({ isVisible: true, headline: randomHeadline });
+    
+            // Hide it after 20 seconds (duration of the scroll animation in CSS)
+            setTimeout(() => {
+                if (isMounted.current) {
+                    setRandomTicker({ isVisible: false, headline: null });
+                }
+                // Reschedule the next one
+                scheduleRandomTicker();
+            }, 20000);
+    
+        }, delay);
+    }, []);
+
+    useEffect(() => {
+        if (gameState.introSequenceFinished) {
+            scheduleRandomTicker();
+        }
+        return () => {
+            if (randomTickerTimerId.current) clearTimeout(randomTickerTimerId.current);
+        }
+    }, [gameState.introSequenceFinished, scheduleRandomTicker]);
+
     // --- GAME OVER SEQUENCE ---
     const initiateGameOverSequence = () => {
         if (!isMounted.current) return;
@@ -1088,11 +1135,11 @@ const App: React.FC = () => {
             }
         };
         
-        if (!gameState.showArrivalNotice) {
+        if (gameState.introSequenceFinished) {
             cheekyIntro();
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [gameState.showArrivalNotice]);
+    }, [gameState.introSequenceFinished]);
 
     useEffect(() => {
         const body = document.body;
@@ -1125,11 +1172,15 @@ const App: React.FC = () => {
             <div id="monitor-bezel">
               <div id="crt-glass" ref={crtGlassRef} className={crtClassName}>
                 {gameState.showArrivalNotice ? (
-                    <ArrivalNotice onComplete={() => setGameState(prev => ({ ...prev, showArrivalNotice: false }))} />
+                    <ArrivalNotice onComplete={() => {
+                        setGameState(prev => ({ ...prev, showArrivalNotice: false, introSequenceFinished: true }));
+                        toggleWindow('netfeed');
+                    }} />
                 ) : (
                     <>
                         <div id="desktop" className={`flex flex-col space-y-4 ${gameState.finaleActive ? 'frozen' : ''}`}>
                             <DesktopIcon name="archive_terminal.exe" onDoubleClick={() => toggleWindow('terminal')} />
+                            <DesktopIcon name="NetFeed.exe" onDoubleClick={() => toggleWindow('netfeed')} />
                             <DesktopIcon name="manual_v1.txt" onDoubleClick={() => toggleWindow('manual')} disabled={isManualLocked} />
                             <DesktopIcon name="ascii_table.txt" onDoubleClick={() => toggleWindow('ascii')} />
                             <DesktopIcon name="system_status.log" onDoubleClick={() => toggleWindow('log')} />
@@ -1140,6 +1191,10 @@ const App: React.FC = () => {
                             <DesktopIcon name="last_transmission_fragment.dat" onDoubleClick={() => {}} disabled={true} />
                             <div className="text-lime-700 text-xs absolute bottom-4 right-4">SYSTEM OK</div>
                         </div>
+
+                        {randomTicker.isVisible && randomTicker.headline && (
+                            <NewsTicker headline={randomTicker.headline} />
+                        )}
 
                         {gameState.finaleActive && (
                             <>
@@ -1212,6 +1267,11 @@ USER SESSION: ADMIN (ACTIVE)
                      {windows.lore.isOpen && (
                         <Window title="CLASSIFIED.txt (Fragment)" onClose={() => closeWindow('lore')} windowState={windows.lore} onFocus={() => bringToFront('lore')} onMove={(newPos) => handleWindowMove('lore', newPos)} isFrozen={gameState.finaleActive}>
                             <Lore />
+                        </Window>
+                    )}
+                     {windows.netfeed.isOpen && (
+                        <Window title="NetFeed.exe (OFFLINE MODE)" onClose={() => closeWindow('netfeed')} windowState={windows.netfeed} onFocus={() => bringToFront('netfeed')} onMove={(newPos) => handleWindowMove('netfeed', newPos)} isFrozen={gameState.finaleActive}>
+                            <NetFeed />
                         </Window>
                     )}
                 </>
