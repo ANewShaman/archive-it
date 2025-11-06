@@ -15,6 +15,7 @@ import ArrivalNotice from "./components/ArrivalNotice";
 import { NewsTicker } from './components/NewsTicker';
 import { NetFeed } from './components/NetFeed';
 import { Notepad } from './components/Notepad';
+import { MemeDecryptor } from './components/MemeDecryptor';
 
 // DELAY
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
@@ -66,6 +67,7 @@ const App: React.FC = () => {
     const [gameState, setGameState] = useState<{
         showArrivalNotice: boolean;
         introSequenceFinished: boolean;
+        isIntroSkipped: boolean;
         glitchActive: boolean;
         currentPuzzle: PuzzleState;
         selectedMeme: string | null;
@@ -86,9 +88,11 @@ const App: React.FC = () => {
         glitchDuration: number;
         victoryCatFrame: string | null;
         isSubtleFlickering: boolean;
+        memeDecryptorActive: boolean;
     }>({
         showArrivalNotice: true,
         introSequenceFinished: false,
+        isIntroSkipped: false,
         glitchActive: true, // Glitches are now permanently on
         currentPuzzle: 0, // 0: NOBLE CHOICE
         selectedMeme: null,
@@ -109,6 +113,7 @@ const App: React.FC = () => {
         glitchDuration: 0,
         victoryCatFrame: null,
         isSubtleFlickering: false,
+        memeDecryptorActive: false,
     });
     
     const gameStateRef = useRef(gameState);
@@ -334,11 +339,11 @@ const App: React.FC = () => {
     }, [addToLog, stopPowerFlicker]);
     
     const startRandomFlickerTimer = useCallback(() => {
-       if (randomFlickerTimerId.current) clearTimeout(randomFlickerTimerId.current);
+       if (randomTickerTimerId.current) clearTimeout(randomTickerTimerId.current);
        const delay = 40000 + Math.random() * 20000; // 40-60 seconds
        console.log(`[DEBUG] Next flicker check in ${delay / 1000} seconds.`);
        
-       randomFlickerTimerId.current = window.setTimeout(() => {
+       randomTickerTimerId.current = window.setTimeout(() => {
            const { currentPuzzle, isInputLocked, isPowerFlickering, finaleActive } = gameStateRef.current;
            // Trigger only during puzzles, not during intro/win, and not if already flickering/disabled or in finale
            if (typeof currentPuzzle === 'number' && currentPuzzle > 0 && !finaleActive && !isInputLocked && !isPowerFlickering) {
@@ -800,7 +805,14 @@ const App: React.FC = () => {
               await typeMessage("Append the final total after the command, separated by a space.");
               break;
             case 9: 
-                promptText = `Attach the payload.`;
+                await typeMessage("Hold up, Runner. We’ve got corrupted meme packets.");
+                await sleep(500);
+                await typeMessage("Decrypt it — fast — before it infects the Archive.");
+                if (isMounted.current) {
+                    setGameState(prev => ({...prev, memeDecryptorActive: true}));
+                    toggleWindow('memeDecrypt');
+                    bringToFront('memeDecrypt');
+                }
                 break;
             default: 
                 promptText = "[ERROR: Unknown Puzzle ID]"; 
@@ -811,11 +823,34 @@ const App: React.FC = () => {
             await typeMessage(promptText);
         }
 
-        if (puzzleId !== 4) {
+        if (puzzleId !== 4 && puzzleId !== 9) {
              if (isMounted.current) setGameState(prev => ({...prev, isInputLocked: false}));
         }
     }, [typeMessage, startLeetspeakFlicker, lockManual, startLogPurgeTimer, startDriftingTerminal, startPopupSwarm]);
     
+    const handleDecryptComplete = useCallback(async () => {
+        if (!isMounted.current) return;
+        setGameState(prev => ({ ...prev, memeDecryptorActive: false }));
+        closeWindow('memeDecrypt');
+        await typeMessage("...Nice. The Meme Matrix grows stronger.");
+        await sleep(500);
+        await typeMessage("Attach the payload."); // Original puzzle 9 prompt
+        if (isMounted.current) {
+            setGameState(prev => ({ ...prev, isInputLocked: false }));
+        }
+    }, [typeMessage]);
+
+    const handleDecryptFailure = useCallback(async () => {
+        if (!isMounted.current) return;
+        setGameState(prev => ({ ...prev, memeDecryptorActive: false }));
+        closeWindow('memeDecrypt');
+        await typeMessage("...System breach detected. Meme integrity lost.");
+        await sleep(1000);
+        await typeMessage("Re-initiating decryption protocol...");
+        await sleep(500);
+        await startPuzzle(9);
+    }, [typeMessage, startPuzzle]);
+
     const handleCursedChoice = useCallback(async (input: string) => {
         if (isMounted.current) {
             setGameState(prev => ({ ...prev, isInputLocked: true }));
@@ -911,7 +946,7 @@ const App: React.FC = () => {
         }
         await sleep(1000);
         if (!isMounted.current) return;
-        await typeMessage("\nERROR: C̷̢̧̨̢̛̣͈̖̮̲͇̘̞̹̫̝̹̳͚̼͈͙̦͙̖͍͕̗̬̬̥̱̞̞͉͚͍̜̅̉͒̽̈̔̍̂̃̈́̄͊̄̐̆̿͑̎̒̃̌͂̄́́͒͗̐̀̇̌͂͗͂́̑̉̽͘̕̕͘̚͠ͅA̸̧̡̛̳̹̯̘̬̳̯̯͙̗̥̎͊̉̍̽̒͐̉̋̓̈́͑͐̂̀̇̏̈́̀̀̈́̍̒̿̃͊̕̕͘͘͠͝͝T̷̛̛͕̆̔͂͊̃̌́̽̋͛̌̈́̽͋̓́͊̎͋̇̂̎͗͋͊̈̂̔͗̂̉̾͗̅̔̑̕̕͘̕̚͠͝͝A̷̺͍͎͈͙̰̰̹̺͇̖̳͚̖̅͋͂̌̒͒̈̿̈͗̑̌͋̈́̈́̌͊̂̊͊͂͂͋̔̈̈́͑̾̌͋̊̄̏̊̀͂̅͑͛̋̚̕͘͝͝͝S̷͍͙̋̇̔͛̋͗̍̒̾̀̒̊̾͛́̓͛̀͆̓̈̀̃̂̅̽͐̀͛̐͘͝͠͝T̵̡̢̢̧̛͇̣͉̤̰̫̰̖̙̗̬͔̮͙̮̰͖̮̲̟̝͍͉̱͈̪͉̲̲̬͓̙̗͙͉̞̀̾̑̏̈́̌̂͋̃̏̓̔̎͗͐̌͆̈́͛́̇̀̔̌̾̋̈̌͒̓̄̓̿̋͑̈́̎̐̚̕̚̚͝͝͠͝R̵̡̧̧̢̡̧̫̤̜̩͎̜͚̬̮̟̠͉̹̘̺̺͇̎̉͑̍͗̈́͒̄̈̓̈́͗̇̂̌͋̒̓̆̿̑̊̌̚͜͜͝͝͠Ó̵̢̩̗͚̲̲̮̤͕̼̘̖̠̱͖̥̺̱̯̤̹̫̝̼͕͖̳̩̼̪̺͍͉͙̝̰̮̼̗͖̤̦̦̒͑̍͂͂̇̈́̚ͅP̷̢̛̛̬̓̀̆͗̂͑͐̽͆̆̀́͊̇͛̔͂͋̉̇͑͆̍̑̀̇̈͆̈́͑͗͘̚͝͠͝͝͝͝͝M͉̗H̸̨̧̢͓͙͙̲̲̲̦̦̬͓̻͚̥͕͕̣͉̻̘̠̜͓̟̦̩́̓̌̎̒̌̀́̀̂̿͛́̃͗́̆̉̏̑̾̑̒̓͗̿͋̊̉͑̀͊̀̍́̑͐̃͘͘̕͘͠Ĭ̶̬̩͙̗̹̖͍̩̖̥̲͖͖̞̫̄̃̄̅͛̄͋͌͋͊͒̍͒̐̓̒̾̃̉͗͌͌̽̽́̚̕̚͝͠͝͠S̨̝̞̠̻͈C̸̛̤͇͊̐̊̄̀̒̒̇̾͗͊͌͛̔́̎͘̕̚ C̷̨̡̢̨̛͎͎̮̳͙͙̜̗͕͍̫͙̜̩̹͔̦̤͓̹̭͎̤̞̩̙̺͓̠̫͙͎͚͓͕̽̈̑̾͌̔̂́͆̆̄̎͛̆̓̔̔͋̓̅̈́̆̃̅͊̋̀̈̈́̔̀̔́̓̂̈́̏͒͊̆͂̉̉̈͌͒͒̏̽͊̾͂̒͗̐̀͂͆͐̈̓͂̎͌̒̃̇̇̇́̈́̿̓̆̔͌̑̉́̌͛̀̀͌͗̓̅̌͘͘͘͘̚͘͜͝͝͝͝͠͠ͅͅ");
+        await typeMessage("\nERROR: C̷̢̧̨̢̛̣͈̖̮̲͇̘̞̹̫̝̹̳͚̼͈͙̦͙̖͍͕̗̬̬̥̱̞̞͉͚͍̜̅̉͒̽̈̔̍̂̃̈́̄͊̄̐̆̿͑̎̒̃̌͂̄́́͒͗̐̀̇̌͂͗͂́̑̉̽͘̕̕͘̚͠ͅA̸̧̡̛̳̹̯̘̬̳̯̯͙̗̥̎͊̉̍̽̒͐̉̋̓̈́͑͐̂̀̇̏̈́̀̀̈́̍̒̿̃͊̕̕͘͘͠͝͝T̷̛̛͕̆̔͂͊̃̌́̽̋͛̌̈́̽͋̓́͊̎͋̇̂̎͗͋͊̈̂̔͗̂̉̾͗̅̔̑̕̕͘̕̚͠͝͝A̷̺͍͎͈͙̰̰̹̺͇̖̳͚̖̅͋͂̌̒͒̈̿̈͗̑̌͋̈́̈́̌͊̂̊͊͂͂͋̔̈̈́͑̾̌͋̊̄̏̊̀͂̅͑͛̋̚̕͘͝͝͝S̷͍͙̋̇̔͛̋͗̍̒̾̀̒̊̾͛́̓͛̀͆̓̈̀̃̂̅̽͐̀͛̐͘͝͠͝T̵̡̢̢̧̛͇̣͉̤̰̫̰̖̙̗̬͔̮͙̮̰͖̮̲̟̝͍͉̱͈̪͉̲̲̬͓̙̗͙͉̞̀̾̑̏̈́̌̂͋̃̏̓̔̎͗͐̌͆̈́͛́̇̀̔̌̾̋̈̌͒̓̄̓̿̋͑̈́̎̐̚̕̚̚͝͝͠͝R̵̡̧̧̢̡̧̫̤̜̩͎̜͚̬̮̟̠͉̹̘̺̺͇̎̉͑̍͗̈́͒̄̈̓̈́͗̇̂̌͋̒̓̆̿̑̊̌̚͜͜͝͝͠Ó̵̢̩̗͚̲̲̮̤͕̼̘̖̠̱͖̥̺̱̯̤̹̫̝̼͕͖̳̩̼̪̺͍͉͙̝̰̮̼̗͖̤̦̦̒͑̍͂͂̇̈́̚ͅP̷̢̛̛̬̓̀̆͗̂͑͐̽͆̆̀́͊̇͛̔͂͋̉̇͑͆̍̑̀̇̈͆̈́͑͗͘̚͝͠͝͝͝͝͝M͉̗H̸̨̧̢͓͙͙̲̲̲̦̦̬͓̻͚̥͕͕̣͉̻̘̠̜͓̟̦̩́̓̌̎̒̌̀́̀̂̿͛́̃͗́̆̉̏̑̾̑̒̓͗̿͋̊̉͑̀͊̀̍́̑͐̃͘͘̕͘͠Ĭ̶̬̩͙̗̹̖͍̩̖̥̲͖͖̞̫̄̃̄̅͛̄͋͌͋͊͒̍͒̐̓̒̾̃̉͗͌͌̽̽́̚̕̚͝͠͝͠S̨̝̞̠̻͈C̸̛̤͇͊̐̊̄̀̒̒̇̾͗͊͌͛̔́̎͘̕̚ C̷̨̡̢̨̛͎͎̮̳͙͙̜̗͕͍̫͙̜̩̹͔̦̤͓̹̭͎̞̩̙̺͓̠̫͙͎͚͓͕̽̈̑̾͌̔̂́͆̆̄̎͛̆̓̔̔͋̓̅̈́̆̃̅͊̋̀̈̈́̔̀̔́̓̂̈́̏͒͊̆͂̉̉̈͌͒͒̏̽͊̾͂̒͗̐̀͂͆͐̈̓͂̎͌̒̃̇̇̇́̈́̿̓̆̔͌̑̉́̌͛̀̀͌͗̓̅̌͘͘͘͘̚͘͜͝͝͝͝͠͠ͅͅ");
         await typeMessage("M̷E̷M̷O̴R̶Y̵ ̴S̷E̸G̴M̸E̴N̴T̴ ̷[̴0̴x̵F̵F̴A̴A̴]̴ ̴U̴N̵R̶E̵A̵D̶A̵B̴L̴E̸.̴");
         await typeMessage("CORRUPTION DETECTED IN C̸͎͇̓̈́Ỏ̸̬̋R̶̫̦̒Ē̷̼ ARCHIVE ̴I̶N̸ ̶C̵O̷R̴E̵ ̸A̶R̴C̷H̴I̸V̶E̵.̵.̵ S̶P̸I̷R̷A̸L̷I̵N̴G̴.̵.̷.̵");
         await typeMessage("!̶@̵#̶%̸^̴&̷*̵(̴)̷_̶+̶");
@@ -1103,6 +1138,45 @@ const App: React.FC = () => {
         };
     }, [gameState.finaleActive, moveBugs]);
 
+    const handleSkip = useCallback(async () => {
+        if (!isMounted.current || !gameStateRef.current.showArrivalNotice) return;
+    
+        const crtFlash = document.createElement("div");
+        crtFlash.className = "crt-flash";
+        document.body.appendChild(crtFlash);
+    
+        setTimeout(async () => {
+            if (!isMounted.current) return;
+            crtFlash.remove();
+            
+            setGameState(prev => ({
+                ...prev,
+                showArrivalNotice: false,
+                introSequenceFinished: true,
+                isIntroSkipped: true, 
+                currentPuzzle: 'SELECT_MEME',
+                isInputLocked: false,
+            }));
+            
+            toggleWindow('terminal');
+            await sleep(200);
+            
+            await typeMessage("---̵ ̸-THE ̸C̸U̷R̸S̸E̷D̴ ̵MENU ̸-̴-̶-̵");
+            addToLog({ text: "", type: 'system' });
+    
+            for (let i = 0; i < CURSED_MENU.length; i++) {
+                if (!isMounted.current) return;
+                const meme = CURSED_MENU[i];
+                addToLog({ text: `[${i + 1}] ${meme.file}`, type: 'ai' });
+                await sleep(25);
+            }
+            
+            if (!isMounted.current) return;
+            addToLog({ text: "", type: 'ai' });
+            await typeMessage("Select one... if you dare. ¯\\_(ツ)_/¯");
+        }, 300);
+    }, [addToLog, typeMessage]);
+
     // Game start effect
     useEffect(() => {
         const cheekyIntro = async () => {
@@ -1134,11 +1208,11 @@ const App: React.FC = () => {
             }
         };
         
-        if (gameState.introSequenceFinished) {
+        if (gameState.introSequenceFinished && !gameState.isIntroSkipped) {
             cheekyIntro();
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [gameState.introSequenceFinished]);
+    }, [gameState.introSequenceFinished, gameState.isIntroSkipped]);
 
     useEffect(() => {
         const body = document.body;
@@ -1171,9 +1245,12 @@ const App: React.FC = () => {
             <div id="monitor-bezel">
               <div id="crt-glass" ref={crtGlassRef} className={crtClassName}>
                 {gameState.showArrivalNotice ? (
-                    <ArrivalNotice onComplete={() => {
-                        setGameState(prev => ({ ...prev, showArrivalNotice: false, introSequenceFinished: true }));
-                    }} />
+                    <ArrivalNotice 
+                        onComplete={() => {
+                            setGameState(prev => ({ ...prev, showArrivalNotice: false, introSequenceFinished: true }));
+                        }}
+                        onSkip={handleSkip}
+                    />
                 ) : (
                     <>
                         <div id="desktop" className={`flex flex-col space-y-4 ${gameState.finaleActive ? 'frozen' : ''}`}>
@@ -1276,6 +1353,11 @@ USER SESSION: ADMIN (ACTIVE)
                     {windows.notes.isOpen && (
                         <Window title="RunnerLog.exe" onClose={() => closeWindow('notes')} windowState={windows.notes} onFocus={() => bringToFront('notes')} onMove={(newPos) => handleWindowMove('notes', newPos)} isFrozen={gameState.finaleActive}>
                             <Notepad />
+                        </Window>
+                    )}
+                    {windows.memeDecrypt.isOpen && (
+                        <Window title="Decrypt_Meme.exe" onClose={() => closeWindow('memeDecrypt')} windowState={windows.memeDecrypt} onFocus={() => bringToFront('memeDecrypt')} onMove={(newPos) => handleWindowMove('memeDecrypt', newPos)} isFrozen={gameState.finaleActive}>
+                            <MemeDecryptor onComplete={handleDecryptComplete} onFailure={handleDecryptFailure} />
                         </Window>
                     )}
                 </>

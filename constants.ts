@@ -54,6 +54,12 @@ export const INITIAL_WINDOWS_STATE: Record<WindowId, WindowState> = {
         position: { x: 200, y: 200 },
         size: { width: 400, height: 300 },
         zIndex: 5,
+    },
+    memeDecrypt: {
+        isOpen: false,
+        position: { x: 300, y: 100 },
+        size: { width: 400, height: 450 },
+        zIndex: 10,
     }
 };
 
