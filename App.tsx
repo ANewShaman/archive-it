@@ -1,5 +1,4 @@
 
-
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 // Fix: Correctly import exported types from types.ts
 import { WindowId, WindowState, LogEntry, PuzzleState, Position, BugInfo, PopupInfo, PuzzleValidationState } from './types';
@@ -100,6 +99,7 @@ const App: React.FC = () => {
         showEmailInbox: boolean;
         snakeFragments: number;
         passwordRevealed: boolean;
+        isSnakeUnlocked: boolean;
         crtShutdownState: 'none' | 'alert' | 'collapse' | 'off';
     }>({
         showArrivalNotice: true,
@@ -130,6 +130,7 @@ const App: React.FC = () => {
         showEmailInbox: false,
         snakeFragments: 0,
         passwordRevealed: false,
+        isSnakeUnlocked: false,
         crtShutdownState: 'none',
     });
     
@@ -535,6 +536,7 @@ const App: React.FC = () => {
         await sleep(1500);
     
         if (isMounted.current) {
+            setGameState(prev => ({ ...prev, isSnakeUnlocked: true }));
             toggleWindow('snakeGame');
             bringToFront('snakeGame');
         }
@@ -1011,7 +1013,7 @@ const App: React.FC = () => {
         }
         await sleep(1000);
         if (!isMounted.current) return;
-        await typeMessage("\nERROR: C̷̢̧̨̢̛̣͈̖̮̲͇̘̞̹̫̝̹̳͚̼͈͙̦͙̖͍͕̗̬̬̥̱̞̞͉͚͍̜̅̉͒̽̈̔̍̂̃̈́̄͊̄̐̆̿͑̎̒̃̌͂̄́́͒͗̐̀̇̌͂͗͂́̑̉̽͘̕̕͘̚͠ͅA̸̧̡̛̳̹̯̘̬̳̯̯͙̗̥̎͊̉̍̽̒͐̉̋̓̈́͑͐̂̀̇̏̈́̀̀̈́̍̒̿̃͊̕̕͘͘͠͝͝T̷̛̛͕̆̔͂͊̃̌́̽̋͛̌̈́̽͋̓́͊̎͋̇̂̎͗͋͊̈̂̔͗̂̉̾͗̅̔̑̕̕͘̕̚͠͝͝A̷̺͍͎͈͙̰̰̹̺͇̖̳͚̖̅͋͂̌̒͒̈̿̈͗̑̌͋̈́̈́̌͊̂̊͊͂͂͋̔̈̈́͑̾̌͋̊̄̏̊̀͂̅͑͛̋̚̕͘͝͝͝S̷͍͙̋̇̔͛̋͗̍̒̾̀̒̊̾͛́̓͛̀͆̓̈̀̃̂̅̽͐̀͛̐͘͝͠͝T̵̡̢̢̧̛͇̣͉̤̰̫̰̖̙̗̬͔̮͙̮̰͖̮̲̟̝͍͉̱͈̪͉̲̲̬͓̙̗͙͉̞̀̾̑̏̈́̌̂͋̃̏̓̔̎͗͐̌͆̈́͛́̇̀̔̌̾̋̈̌͒̓̄̓̿̋͑̈́̎̐̚̕̚̚͝͝͠͝R̵̡̧̧̢̡̧̫̤̜̩͎̜͚̬̮̟̠͉̹̘̺̺͇̎̉͑̍͗̈́͒̄̈̓̈́͗̇̂̌͋̒̓̆̿̑̊̌̚͜͜͝͝͠Ó̵̢̩̗͚̲̲̮̤͕̼̘̖̠̱͖̥̺̱̯̤̹̫̝̼͕͖̳̩̼̪̺͍͉͙̝̰̮̼̗͖̤̦̦̒͑̍͂͂̇̈́̚ͅP̷̢̛̛̬̓̀̆͗̂͑͐̽͆̆̀́͊̇͛̔͂͋̉̇͑͆̍̑̀̇̈͆̈́͑͗͘̚͝͠͝͝͝͝͝M͉̗H̸̨̧̢͓͙͙̲̲̲̦̦̬͓̻͚̥͕͕̣͉̻̘̠̜͓̟̦̩́̓̌̎̒̌̀́̀̂̿͛́̃͗́̆̉̏̑̾̑̒̓͗̿͋̊̉͑̀͊̀̍́̑͐̃͘͘̕͘͠Ĭ̶̬̩͙̗̹̖͍̩̖̥̲͖͖̞̫̄̃̄̅͛̄͋͌͋͊͒̍͒̐̓̒̾̃̉͗͌͌̽̽́̚̕̚͝͠͝͠S̨̝̞̠̻͈C̸̛̤͇͊̐̊̄̀̒̒̇̾͗͊͌͛̔́̎͘̕̚ C̷̨̡̢̨̛͎̮̳͙͙̜̗͕͍̫͙̜̩̹͔̦͓̹̭͎̞̩̙̺͓̠̫͎͚͓͕̽̈̑̾͌̔̂́͆̆̄̎͛̆̓̔̔͋̓̅̈́̆̃̅͊̋̀̈̈́̔̀̔́̓̂̈́̏͒͊̆͂̉̉̈͌͒͒̏̽͊̾͂̒͗̐̀͂͆͐̈̓͂̎͌̒̃̇̇̇́̈́̿̓̆̔͌̑̉́̌͛̀̀͌͗̓̅̌͘͘͘͘̚͘͜͝͝͝͝͠͠ͅͅ");
+        await typeMessage("\nERROR: C̷̢̧̨̢̛̣͈̖̮̲͇̘̞̹̫̝̹̳͚̼͈͙̦͙̖͍͕̗̬̬̥̱̞̞͉͚͍̜̅̉͒̽̈̔̍̂̃̈́̄͊̄̐̆̿͑̎̒̃̌͂̄́́͒͗̐̀̇̌͂͗͂́̑̉̽͘̕̕͘̚͠ͅA̸̧̡̛̳̹̯̘̬̳̯̯͙̗̥̎͊̉̍̽̒͐̉̋̓̈́͑͐̂̀̇̏̈́̀̀̈́̍̒̿̃͊̕̕͘͘͠͝͝T̷̛̛͕̆̔͂͊̃̌́̽̋͛̌̈́̽͋̓́͊̎͋̇̂̎͗͋͊̈̂̔͗̂̉̾͗̅̔̑̕̕͘̕̚͠͝͝A̷̺͍͎͈͙̰̰̹̺͇̖̳͚̖̅͋͂̌̒͒̈̿̈͗̑̌͋̈́̈́̌͊̂̊͊͂͂͋̔̈̈́͑̾̌͋̊̄̏̊̀͂̅͑͛̋̚̕͘͝͝͝S̷͍͙̋̇̔͛̋͗̍̒̾̀̒̊̾͛́̓͛̀͆̓̈̀̃̂̅̽͐̀͛̐͘͝͠͝T̵̡̢̢̧̛͇̣͉̤̰̫̰̖̙̗̬͔̮͙̮̰͖̮̲̟̝͍͉̱͈̪͉̲̲̬͓̙̗͙͉̞̀̾̑̏̈́̌̂͋̃̏̓̔̎͗͐̌͆̈́͛́̇̀̔̌̾̋̈̌͒̓̄̓̿̋͑̈́̎̐̚̕̚̚͝͝͠͝R̵̡̧̧̢̡̧̫̤̜̩͎̜͚̬̮̟̠͉̹̘̺̺͇̎̉͑̍͗̈́͒̄̈̓̈́͗̇̂̌͋̒̓̆̿̑̊̌̚͜͜͝͝͠Ó̵̢̩̗͚̲̲̮̤͕̼̘̖̠̱͖̥̺̱̯̤̹̫̝̼͕͖̳̩̼̪̺͍͉͙̝̰̮̼̗͖̤̦̦̒͑̍͂͂̇̈́̚ͅP̷̢̛̛̬̓̀̆͗̂͑͐̽͆̆̀́͊̇͛̔͂͋̉̇͑͆̍̑̀̇̈͆̈́͑͗͘̚͝͠͝͝͝͝͝M͉̗H̸̨̧̢͓͙͙̲̲̲̦̦̬͓̻͚̥͕͕̣͉̻̘̠̜͓̟̦̩́̓̌̎̒̌̀́̀̂̿͛́̃͗́̆̉̏̑̾̑̒̓͗̿͋̊̉͑̀͊̀̍́̑͐̃͘͘̕͘͠Ĭ̶̬̩͙̗̹̖͍̩̖̥̲͖͖̞̫̄̃̄̅͛̄͋͌͋͊͒̍͒̐̓̒̾̃̉͗͌͌̽̽́̚̕̚͝͠͝͠S̨̝̞̠̻͈C̸̛̤͇͊̐̊̄̀̒̒̇̾͗͊͌͛̔́̎͘̕̚ C̷̡̛͎̮̳͙͙̜̗͕͍̫͙̜̩̹͔̦͓̹̭͎̞̩̙̺͓̠̫̽̈̑̾͌̔̂́͆̆̄̎͛̆̓̔̔͋̓̅̈́̆̃̅͊̋̀̈̈́̔̀̔́̓̂̈́̏͒͊̆͂̉̉̈͌͒͒̏̽͊̾͂̒͗̐̀͂͆͐̈̓͂̎͌̒̃̇̇̇́̈́̿̓̆̔͌̑̉́̌͛̀̀͌͗̓̅̌͘͘͘͘̚͘͝͝͝͝͠͠ͅͅLighting̢̨͎͚͓͕͜");
         await typeMessage("M̷E̷M̷O̴R̶Y̵ ̴S̷E̸G̴M̸E̴N̴T̴ ̷[̴0̴x̵F̵F̴A̴A̴]̴ ̴U̴N̵R̶E̵A̵D̶A̵B̴L̴E̸.̴");
         await typeMessage("CORRUPTION DETECTED IN C̸͎͇̓̈́Ỏ̸̬̋R̶̫̦̒Ē̷̼ ARCHIVE ̴I̶N̸ ̶C̵O̷R̴E̵ ̸A̶R̴C̷H̴I̸V̶E̵.̵.̵ S̶P̸I̷R̷A̸L̷I̵N̴G̴.̵.̷.̵");
         await typeMessage("!̶@̵#̶%̸^̴&̷*̵(̴)̷_̶+̶");
@@ -1399,7 +1401,7 @@ const App: React.FC = () => {
                             <DesktopIcon name="system_status.log" onDoubleClick={() => toggleWindow('log')} />
                             <DesktopIcon name="CLASSIFIED.txt" onDoubleClick={() => toggleWindow('lore')} />
                             <DesktopIcon name="EmailInbox.exe" onDoubleClick={() => toggleWindow('emailInbox')} />
-                            <DesktopIcon name="Snake.exe" onDoubleClick={() => toggleWindow('snakeGame')} />
+                            <DesktopIcon name="Snake.exe" onDoubleClick={() => toggleWindow('snakeGame')} disabled={!gameState.isSnakeUnlocked} />
                             <DesktopIcon name="system_log_corrupt.txt" onDoubleClick={() => {}} disabled={true} />
                             <DesktopIcon name="backup_failed_report.log" onDoubleClick={() => {}} disabled={true} />
                             <DesktopIcon name="unknown_artifact.zip" onDoubleClick={() => {}} disabled={true} />
