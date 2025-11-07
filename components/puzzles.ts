@@ -7,7 +7,7 @@ function validatePuzzle1(input: string, originalCommand: string): boolean | stri
     const cleanedInput = input.trim(); // Trim whitespace
 
     if (cleanedInput.toLowerCase() === "initiate_handshake") {
-        return "Eh? Why so formal? Needs the digital sign-off! \u{1F91D}";
+        return "Eh? Why so formal? Needs the digital sign-off!";
     }
     
     if (cleanedInput === "🤝") { // Check if they used the actual emoji character

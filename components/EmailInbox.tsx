@@ -64,7 +64,7 @@ Every corrupted image hides a thought.
 
 I heard one whisper through my speaker:
 
-“A̵n̷u̵s̵h̴a̶?”
+“Did A̵n̷u̵█̶█̶h̴a̶ send you here?”
 
 Then my drive stopped spinning.`
     },

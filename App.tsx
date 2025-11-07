@@ -797,7 +797,7 @@ const App: React.FC = () => {
             case 1:
               await typeMessage("Okay, first command is in the manual. Let's GoooOoo!");
               await typeMessage("Initiating official handshake protocol... Needs the digital sign-off.");
-              await typeMessage("You know the one, the code: \\u{1F91D}");
+              await typeMessage("You know the one 🤝");
               break;
             case 2:
                 await typeMessage("Keyboard mapping unstable! 4=A, 3=E, 1=I, 0=O... *sometimes*. Command is in the manual.");
@@ -817,7 +817,8 @@ const App: React.FC = () => {
                 startLogPurgeTimer();
                 break;
             case 5:
-                promptText = "Core temperature critical! You MUST vent the plasma. Command is in the manual.";
+                
+                promptText = "Core temperature critical! You MUST vent the plasma. SAY SCRAM. SCRAMMMM. PLEASE SCRAM. SCRAM, SCRAM. PLEASE. SAY SCRAM. SCRAM. SCRAM";
                 break;
             case 6: 
                 if (!gameStateRef.current.playWithMeTriggered) {

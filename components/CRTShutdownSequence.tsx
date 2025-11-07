@@ -15,7 +15,7 @@ const CrtShutdownSequence: React.FC<CrtShutdownSequenceProps> = ({ shutdownState
         <div className="shutdown-alert-text">
           ⚠ WARNING ⚠<br/>
           RUNNER DETECTED<br/>
-          WARNING! WARNING!
+          WARNING! WARNING! You are tar█̶█̶d
         </div>
       </div>
     );
