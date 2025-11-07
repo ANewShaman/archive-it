@@ -22,6 +22,7 @@ import PlayWithMe from './components/PlayWithMe';
 import SnakeGame from './components/SnakeGame';
 import EmailInbox from './components/EmailInbox';
 import { SystemStatusLog } from './components/SystemStatusLog';
+import CrtShutdownSequence from './components/CrtShutdownSequence';
 
 // DELAY
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
@@ -99,6 +100,7 @@ const App: React.FC = () => {
         showEmailInbox: boolean;
         snakeFragments: number;
         passwordRevealed: boolean;
+        crtShutdownState: 'none' | 'alert' | 'collapse' | 'off';
     }>({
         showArrivalNotice: true,
         introSequenceFinished: false,
@@ -128,6 +130,7 @@ const App: React.FC = () => {
         showEmailInbox: false,
         snakeFragments: 0,
         passwordRevealed: false,
+        crtShutdownState: 'none',
     });
     
     const gameStateRef = useRef(gameState);
@@ -528,7 +531,7 @@ const App: React.FC = () => {
         await typeMessage("You 'won'. Congratulations? <(￣︶￣)>", "system");
 
         await sleep(1000);
-        await typeMessage("Here's my treat! One last little game for me, please? 💖", 'ai');
+        await typeMessage("Here's my treat! One last little game for me, please? <3", 'ai');
         await sleep(1500);
     
         if (isMounted.current) {
@@ -571,8 +574,8 @@ const App: React.FC = () => {
             id: bugIdCounter.current++,
             x: Math.random() * (rect.width - 30),
             y: Math.random() * (rect.height - 30),
-            vx: (Math.random() - 0.5) * 23,
-            vy: (Math.random() - 0.5) * 23,
+            vx: (Math.random() - 0.5) * 18,
+            vy: (Math.random() - 0.5) * 18,
         }));
 
         switch (newMissCount) {
@@ -645,8 +648,8 @@ const App: React.FC = () => {
             id: bugIdCounter.current++,
             x: Math.random() * (rect.width - 30),
             y: Math.random() * (rect.height - 30),
-            vx: (Math.random() - 0.5) * 23,
-            vy: (Math.random() - 0.5) * 23,
+            vx: (Math.random() - 0.5) * 15,
+            vy: (Math.random() - 0.5) * 15,
         };
         
         setGameState(prev => ({ ...prev, finaleActive: true, isInputLocked: true, missCount: 0, bugs: [firstBug] }));
@@ -1191,6 +1194,40 @@ const App: React.FC = () => {
         }
     }, [typeMessage]);
 
+    const handleAllEmailsRead = useCallback(() => {
+        // Prevent re-triggering
+        if (gameStateRef.current.crtShutdownState !== 'none' || !isMounted.current) return;
+    
+        // Wait 2 seconds, then start the sequence
+        setTimeout(() => {
+            if (!isMounted.current) return;
+            
+            // 1. Alert phase
+            setGameState(prev => ({ ...prev, crtShutdownState: 'alert', isInputLocked: true }));
+    
+            // 2. Collapse phase after 6 seconds
+            setTimeout(() => {
+                if (!isMounted.current || gameStateRef.current.crtShutdownState !== 'alert') return;
+                
+                // Trigger white flash
+                setGameState(prev => ({ ...prev, screenFlash: 'white' }));
+                setTimeout(() => {
+                    if(isMounted.current) setGameState(prev => ({...prev, screenFlash: null}));
+                }, 300);
+    
+                // Start collapse
+                setGameState(prev => ({ ...prev, crtShutdownState: 'collapse' }));
+    
+                // 3. Off phase after 4 seconds (duration of collapse animations)
+                setTimeout(() => {
+                    if (!isMounted.current) return;
+                    setGameState(prev => ({ ...prev, crtShutdownState: 'off' }));
+                }, 4000);
+            }, 6000);
+    
+        }, 2000);
+    }, []);
+
     const moveBugs = useCallback(() => {
         setGameState(prev => {
             if (!prev.finaleActive) return prev;
@@ -1321,9 +1358,14 @@ const App: React.FC = () => {
         };
     }, [gameState.glitchActive]);
 
+    if (gameState.crtShutdownState === 'off') {
+        return <div className="w-screen h-screen bg-black" />;
+    }
+
     const persistentGlitchClass = gameState.activeGlitch ? `glitch-${gameState.activeGlitch}` : '';
     const subtleFlickerClass = gameState.isSubtleFlickering ? 'subtle-flicker' : '';
-    const crtClassName = `${persistentGlitchClass} ${gameState.finaleGlitch} ${subtleFlickerClass}`.trim();
+    const shouldInvertCrt = gameState.crtShutdownState === 'collapse';
+    const crtClassName = `${persistentGlitchClass} ${gameState.finaleGlitch} ${subtleFlickerClass} ${shouldInvertCrt ? 'crt-collapse-inverting' : ''}`.trim();
 
     return (
         <div className={`w-screen h-screen overflow-hidden bg-black text-lime-400 font-mono select-none ${gameState.isBugSwarmActive ? 'bug-swarm' : ''}`}>
@@ -1460,11 +1502,12 @@ const App: React.FC = () => {
                     )}
                     {windows.emailInbox.isOpen && (
                         <Window title="EmailInbox.exe" onClose={() => closeWindow('emailInbox')} windowState={windows.emailInbox} onFocus={() => bringToFront('emailInbox')} onMove={(newPos) => handleWindowMove('emailInbox', newPos)} isFrozen={gameState.finaleActive}>
-                            <EmailInbox fragments={gameState.snakeFragments} />
+                            <EmailInbox fragments={gameState.snakeFragments} onAllEmailsRead={handleAllEmailsRead} />
                         </Window>
                     )}
                 </>
             )}
+             <CrtShutdownSequence shutdownState={gameState.crtShutdownState} />
         </div>
     );
 };

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 interface EmailInboxProps {
   fragments: number;
+  onAllEmailsRead: () => void;
 }
 
 interface Email {
@@ -125,12 +126,13 @@ const CorruptedGhostFragment: React.FC = () => (
 );
 
 
-const EmailInbox: React.FC<EmailInboxProps> = ({ fragments }) => {
+const EmailInbox: React.FC<EmailInboxProps> = ({ fragments, onAllEmailsRead }) => {
     const [authenticated, setAuthenticated] = useState(false);
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
     const [readEmails, setReadEmails] = useState<Set<number>>(new Set());
+    const allReadTriggered = useRef(false);
 
     const [fakeTime] = useState(() => {
         const hours = String(Math.floor(Math.random() * 24)).padStart(2, '0');
@@ -138,6 +140,16 @@ const EmailInbox: React.FC<EmailInboxProps> = ({ fragments }) => {
         const seconds = String(Math.floor(Math.random() * 60)).padStart(2, '0');
         return `${hours}:${minutes}:${seconds}`;
     });
+
+    const availableEmails = EMAILS.filter((_, index) => index < fragments);
+
+    useEffect(() => {
+        // Check if all available emails have been read
+        if (!allReadTriggered.current && availableEmails.length > 0 && readEmails.size === availableEmails.length) {
+          allReadTriggered.current = true;
+          onAllEmailsRead();
+        }
+      }, [readEmails, availableEmails, onAllEmailsRead]);
 
     const handleAuth = (e: React.FormEvent) => {
         e.preventDefault();
