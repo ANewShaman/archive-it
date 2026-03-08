@@ -1,0 +1,89 @@
+# Archive It! - Puzzle Solutions
+
+Stuck, Runner? CheekyOS is a pain. Here are the solutions to get you through the protocol.
+
+---
+
+### Puzzle 1: INITIATE_HANDSHAKE
+The AI asks for the "digital sign-off" code, which it gives you: \u{1F91D}.
+
+**Answer:**
+\u{1F91D}
+
+---
+
+### Puzzle 2: CALIBRATE_SYSTEM
+The AI tells you the keyboard mapping is unstable and gives you the leetspeak key: 4=A, 3=E, 1=I, 0=O. You need to apply this to the command.
+
+**Answer:**
+c4l1br4t3_syst3m
+
+---
+
+### Puzzle 3: PURGE
+The AI says the parser only accepts ASCII decimal codes. You need to convert each character of "PURGE" to its decimal equivalent using the `ascii_table.txt`.
+P=80, U=85, R=82, G=71, E=69
+
+**Answer:**
+80 85 82 71 69
+
+---
+
+### Puzzle 4: VERIFY_LOG_INTEGRITY
+The AI purges the log and locks the manual, asking you to re-enter all *previous successful commands*, separated by spaces. This means your exact inputs for puzzles 1, 2, and 3.
+
+**Answer (will be based on your exact previous inputs):**
+\u{1F91D} c4l1br4t3_syst3m 80 85 82 71 69
+
+---
+
+### Puzzle 5: VENT_PLASMA
+This is a straightforward command, but the AI tries to trick you by suggesting you type "SCRAM". Do not type SCRAM.
+
+**Answer:**
+VENT_PLASMA
+
+---
+
+### Puzzle 6: AUTHORIZE_ADMIN_OVERRIDE
+The backspace key is disabled. You must type the command perfectly, paying attention to case.
+
+**Answer:**
+AUTHORIZE_ADMIN_OVERRIDE
+
+---
+
+### Puzzle 7: SET_TERMINAL_ANCHORS
+The terminal window is drifting. You just need to type the command correctly.
+
+**Answer:**
+SET_TERMINAL_ANCHORS
+
+---
+
+### Puzzle 8: RUN_POWER_DIAGNOSTIC
+You need to calculate a checksum.
+1. Length of your successful input for Puzzle 1 (`\u{1F91D}` is 9 characters).
+2. Length of your successful input for Puzzle 5 (`VENT_PLASMA` is 11 characters).
+3. The "Kernel Panic Code" from `system_status.log` (which is 42).
+
+Calculation: 9 + 11 + 42 = 62
+
+**Answer:**
+RUN_POWER_DIAGNOSTIC 62
+
+---
+
+### Puzzle 9: LAUNCH_PAYLOAD
+After completing the decryptor minigame, you must attach the payload, which is the meme file you chose at the very beginning.
+
+**Answer (example, depends on your choice):**
+LAUNCH_PAYLOAD this_is_fine.gif
+
+---
+
+### Email Inbox Password
+After playing Snake, you gain access to the email client. The password can be found in `system_status.log` once it's "unredacted".
+
+**Password:**
+MEME_OVERRIDE_198X
