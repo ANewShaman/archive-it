@@ -5,7 +5,7 @@
 Archive It! is an immersive, narrative-driven puzzle game set within the interface of a failing, retro-inspired operating system. As a "Data-Runner" in a post-internet world, your mission is to follow a strict protocol to upload a critical fragment of human history.
 
 However, the archive's AI warden, "CheekyOS," a sentient but unstable system corrupted by late-stage internet culture, actively obstructs your progress. It will fight you with a series of puzzles, system malfunctions, mini-games, and mischievous taunts, creating a unique and adversarial gameplay experience all viewed through the lens of a CRT monitor.
-
+## Link: https://agent-69ad19c1ed3772c849011eb7--archive-it.netlify.app/
 ## Gameplay Mechanics
 
 The objective is to successfully execute a series of commands listed in the `manual_v1.txt` file on the desktop. The core gameplay loop is:
